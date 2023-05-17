@@ -47,7 +47,7 @@ def get_dealers_from_cf(url):
     results = []
     json_result = get_request(url)
     if json_result:
-        dealers = json_result["body"]
+        dealers = json_result
         for dealer in dealers:
             dealer_doc = dealer["doc"]
             dealer_obj = CarDealer(
@@ -67,7 +67,9 @@ def get_dealers_from_cf(url):
 def get_dealer_by_id_from_cf(url, dealer_id):
     json_result = get_request(url, id=dealer_id)
     if json_result:
-        dealer_doc = json_result["body"][0]
+        dealer_doc = json_result[0]
+        print(dealer_doc)
+        print(json_result)
         dealer_obj = CarDealer(
             address=dealer_doc["address"],
             city=dealer_doc["city"],
@@ -85,7 +87,7 @@ def get_dealers_by_st_from_cf(url, state):
     results = []
     json_result = get_request(url, st=state)
     if json_result:
-        dealers = json_result["body"]
+        dealers = json_result
         for dealer_doc in dealers:
             dealer_obj = CarDealer(
                 address=dealer_doc["address"],
@@ -101,14 +103,18 @@ def get_dealers_by_st_from_cf(url, state):
             results.append(dealer_obj)
     return results
 
-def get_dealer_reviews_from_cf(url, dealer_id):
+def get_dealer_reviews_from_cf(url, **kwargs):
     results = []
-    json_result = get_request(url, dealership=dealer_id)
+    id = kwargs.get("id")
+    if id:
+        json_result = get_request(url, id=id)
+    else:
+        json_result = get_request(url)
     if json_result:
-        reviews = json_result["body"]["data"]
+        reviews = json_result["data"]
 
-        for dealer_review in reviews:
-            dealer_review = reviews["docs"][0]
+        for dealer_review in reviews["docs"]:
+            # dealer_review = reviews["docs"][0]
             
             review_obj = DealerReview(dealership=dealer_review["dealership"],
                                    name=dealer_review["name"],
