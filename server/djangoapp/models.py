@@ -28,7 +28,7 @@ class CarModel(models.Model):
         (JEEP, 'Jeep')
     ]
     model_type = models.CharField(max_length=5, choices=TYPE_CHOICES)
-    year = models.IntegerField(default=datetime.date.today().year) 
+    year = models.IntegerField(default=datetime.date.today().year)
     
     def __str__(self):
         return "Make: " + self.make.name + "," \

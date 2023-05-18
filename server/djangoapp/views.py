@@ -90,10 +90,13 @@ def get_dealerships(request):
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
         url = "https://us-south.functions.appdomain.cloud/api/v1/web/461b4d00-9de7-4d69-900d-ba2051d41283/default/get-review"
-        reviews = get_dealer_reviews_from_cf(url, id=dealer_id)
+        dealer_url = "https://us-south.functions.appdomain.cloud/api/v1/web/461b4d00-9de7-4d69-900d-ba2051d41283/default/get-dealership"
+        reviews = get_dealer_reviews_from_cf(url, id = dealer_id)
+        dealer_detail = get_dealer_by_id_from_cf(dealer_url,dealer_id)
         context = {
             "reviews": reviews,
-            "dealer_id": dealer_id
+            "dealer_id": dealer_id,
+            "dealer": dealer_detail
         }
         print(context)
         return render(request, 'djangoapp/dealer_details.html', context)
@@ -116,27 +119,30 @@ def add_review(request, dealer_id):
             return render(request, 'djangoapp/add_review.html', context)
         
         if request.method == "POST":
-            print("test 123")
-            print(request.user)
-            print(request.POST)
-            review = {}
-            review["name"] = request.POST["name"]
-            form = request.POST
-            review["dealership"] = dealer_id
-            review["review"] = form["review"]
-            if(form.get("purchasecheck") == "on"):
-                review["purchase"] = True
-            else:
-                review["purchase"] = False
-            if(review["purchase"]):
-                review["purchase_date"] = datetime.strptime(form.get("purchasedate"), "%m/%d/%Y").isoformat()
-                car = CarModel.objects.get(pk=form["car"])
-                review["car_make"] = car.make.name
-                review["car_model"] = car.name
-                review["car_year"] = car.year
-            post_url = "https://us-south.functions.cloud.ibm.com/api/v1/namespaces/461b4d00-9de7-4d69-900d-ba2051d41283/actions/post-review"
-            json_payload = { "review": review }
-            post_request(post_url, json_payload, dealer_id=dealer_id)
+            if request.user.is_authenticated:
+                username = request.user.username
+                print(request.POST)
+                form = request.POST 
+                payload = dict()
+                car_id = form.get("car")
+                car = CarModel.objects.get(pk=car_id)
+                print(car)
+                payload["name"] = username
+                payload["dealership"] = dealer_id
+                payload["id"] = dealer_id
+                payload["review"] = form.get("review")
+                payload["purchase"] = False
+                if "purchasecheck" in request.POST:
+                    if request.POST["purchasecheck"] == 'on':
+                        payload["purchase"] = True
+                payload["purchase_date"] = form.get("purchase_date")
+                payload["car_make"] = car.make.name
+                payload["car_model"] = car.name
+                payload["car_year"] = int(car.year)
+                new_payload = {}
+                new_payload["review"] = payload
+                review_post_url = "https://us-south.functions.appdomain.cloud/api/v1/web/461b4d00-9de7-4d69-900d-ba2051d41283/default/post-review"
+                post_request(review_post_url, new_payload, id=dealer_id)
             return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
     else:
         return redirect("/djangoapp/login")

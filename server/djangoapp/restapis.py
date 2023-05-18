@@ -37,7 +37,7 @@ def post_request(url, payload, **kwargs):
     print(kwargs)
     print("POST to {} ".format(url))
     print(payload)
-    response = requests.post(url, params=kwargs, json=payload)
+    response = requests.post(url, json=payload)
     status_code = response.status_code
     print("With status {} ".format(status_code))
     json_data = json.loads(response.text)
@@ -141,11 +141,42 @@ def get_dealer_reviews_from_cf(url, **kwargs):
 def analyze_review_sentiments(text):
     url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/15be9850-7398-4f67-88ea-082137ddaa59"
     api_key = "6Q_BypRlDaJKxLDAQU25dVElZ-lAEZnMd8inGWzBu_AZ"
-    authenticator = IAMAuthenticator(api_key)
-    natural_language_understanding = NaturalLanguageUnderstandingV1(version='2022-08-01',authenticator=authenticator)
-    natural_language_understanding.set_service_url(url)
-    response = natural_language_understanding.analyze( text=text+"hello hello hello",features=Features(sentiment=SentimentOptions(targets=[text+"hello hello hello"]))).get_result()
-    label=json.dumps(response, indent=2)
-    label = response['sentiment']['document']['label']
+    # authenticator = IAMAuthenticator(api_key) 
+    # natural_language_understanding = NaturalLanguageUnderstandingV1(version='2021-08-01',authenticator=authenticator)
+    # natural_language_understanding.set_service_url(url)
+    # response = natural_language_understanding.analyze( text=text,features=Features(sentiment=SentimentOptions(targets=[text+"hello hello hello"])), language='en').get_result()
+    # label=json.dumps(response, indent=2)
+    # label = response['sentiment']['document']['label']
     
-    return(label)
+    # return(label)
+    # params = json.dumps({"text": text, "features": {"sentiment": {}}})
+    # response = requests.post(url,data=params,headers={'Content-Type':'application/json'},auth=HTTPBasicAuth("apikey", api_key))
+    # print("NLU response")
+    # print(response)
+    # #print(response.json())
+    # try:
+    #     sentiment=response.json()['sentiment']['document']['label']
+    #     return sentiment
+    # except:
+    #     return "neutral"
+    texttoanalyze= text
+    version = '2020-08-01'
+    authenticator = IAMAuthenticator(api_key)
+    natural_language_understanding = NaturalLanguageUnderstandingV1(
+    version='2020-08-01',
+    authenticator=authenticator
+    )
+    natural_language_understanding.set_service_url(url)
+    response = natural_language_understanding.analyze(
+        text=text,
+        features= Features(sentiment= SentimentOptions()),
+        language="en"
+    ).get_result()
+    print(json.dumps(response))
+    sentiment_score = str(response["sentiment"]["document"]["score"])
+    sentiment_label = response["sentiment"]["document"]["label"]
+    print(sentiment_score)
+    print(sentiment_label)
+    sentimentresult = sentiment_label
+    
+    return sentimentresult
